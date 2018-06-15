@@ -15,7 +15,7 @@ struct BridgeVST : public AudioEffectX {
 	BridgeClient *client;
 	bool lastPlaying = false;
 
-	BridgeVST(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 1 + BRIDGE_NUM_PARAMS) {
+	BridgeVST(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, 2 + BRIDGE_NUM_PARAMS) {
 		isSynth(true);
 		setNumInputs(BRIDGE_INPUTS);
 		setNumOutputs(BRIDGE_OUTPUTS);
@@ -84,49 +84,57 @@ struct BridgeVST : public AudioEffectX {
 
 	void setParameter(VstInt32 index, float value) override {
 		if (index == 0) {
+			client->setTCPPort((int) roundf(value * (TCP_PORT_MAX)));
+		}
+		if (index == 1) {
 			client->setPort((int) roundf(value * (BRIDGE_NUM_PARAMS - 1.f)));
 		}
-		else if (index > 0) {
-			client->setParam(index - 1, value);
+		else if (index > 1) {
+			client->setParam(index - 2, value);
 		}
 	}
 
 	float getParameter(VstInt32 index) override {
 		if (index == 0) {
+			return client->getTCPPort() / (float) (TCP_PORT_MAX);
+		}
+		else if (index == 1) {
 			return client->getPort() / (BRIDGE_NUM_PARAMS - 1.f);
 		}
-		else if (index > 0) {
-			return client->getParam(index - 1);
+		else if (index > 1) {
+			return client->getParam(index - 2);
 		}
 		return 0.f;
 	}
 
 	void getParameterLabel(VstInt32 index, char *label) override {
-		if (index == 0) {
-			snprintf(label, kVstMaxParamStrLen, "");
-		}
-		else if (index > 0) {
-			snprintf(label, kVstMaxParamStrLen, "");
-		}
+		snprintf(label, kVstMaxParamStrLen, "");
 	}
 
 	void getParameterDisplay(VstInt32 index, char *text) override {
 		if (index == 0) {
+			snprintf(text, kVstMaxParamStrLen, "%d", client->getTCPPort());
+		}
+		else if (index == 1) {
 			snprintf(text, kVstMaxParamStrLen, "%d", client->getPort() + 1);
 		}
-		else if (index > 0) {
-			snprintf(text, kVstMaxParamStrLen, "%0.2f V", 10.f * client->getParam(index - 1));
+		else if (index > 1) {
+			snprintf(text, kVstMaxParamStrLen, "%0.2f V", 10.f * client->getParam(index - 2));
 		}
 	}
 
 	void getParameterName(VstInt32 index, char *text) override {
 		if (index == 0) {
-			// Port selector
+			// TCP Port selector
+			snprintf(text, kVstMaxParamStrLen, "TCP Port");
+		}
+		else if (index == 1) {
+			// Brige Port selector
 			snprintf(text, kVstMaxParamStrLen, "Port");
 		}
-		else if (index > 0) {
+		else if (index > 1) {
 			// Automation parameters
-			snprintf(text, kVstMaxParamStrLen, "CC %d", index - 1);
+			snprintf(text, kVstMaxParamStrLen, "CC %d", index - 2);
 		}
 	}
 

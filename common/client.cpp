@@ -19,6 +19,7 @@
 #include <mutex>
 #include <chrono>
 
+#define TCP_PORT_MAX 65535
 
 using namespace rack;
 
@@ -50,6 +51,7 @@ struct BridgeClient {
 
 	int port = 0;
 	bool portDirty = false;
+	int tcpPort = BRIDGE_PORT;
 	float params[BRIDGE_NUM_PARAMS] = {};
 	bool paramsDirty[BRIDGE_NUM_PARAMS] = {};
 	int sampleRate = 44100;
@@ -108,7 +110,8 @@ struct BridgeClient {
 		struct sockaddr_in addr;
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons(BRIDGE_PORT);
+		log("will connect to port: %i", tcpPort);
+		addr.sin_port = htons(tcpPort);
 		addr.sin_addr.s_addr = inet_addr(BRIDGE_HOST);
 
 		// Open socket
@@ -251,6 +254,15 @@ struct BridgeClient {
 	}
 
 	// Public API
+	void setTCPPort(int tcpPort) {
+		if (tcpPort == this->tcpPort)
+			return;
+		this->tcpPort = tcpPort;
+		// will reset as well bridge port
+		portDirty = true;
+		// disconnect from current server, will connect to new port after next thread loop
+		disconnect();
+	}
 
 	void setPort(int port) {
 		if (port == this->port)
@@ -264,6 +276,10 @@ struct BridgeClient {
 			return;
 		this->sampleRate = sampleRate;
 		sampleRateDirty = true;
+	}
+
+	int getTCPPort() {
+		return tcpPort;
 	}
 
 	int getPort() {
