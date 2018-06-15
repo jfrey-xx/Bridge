@@ -19,7 +19,10 @@
 #include <mutex>
 #include <chrono>
 
-#define TCP_PORT_MAX 65535
+// since VST is constrained by a conversion between float and int, we have to limit the number of TCP port due to rounding precision.
+#define TCP_PORT_MIN BRIDGE_PORT
+#define TCP_PORT_RANGE 1000
+#define TCP_PORT_MAX BRIDGE_PORT+TCP_PORT_RANGE
 
 using namespace rack;
 

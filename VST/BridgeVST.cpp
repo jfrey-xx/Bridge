@@ -84,7 +84,7 @@ struct BridgeVST : public AudioEffectX {
 
 	void setParameter(VstInt32 index, float value) override {
 		if (index == 0) {
-			client->setTCPPort((int) roundf(value * (TCP_PORT_MAX)));
+			client->setTCPPort((int) roundf(TCP_PORT_MIN + value * (TCP_PORT_RANGE)));
 		}
 		if (index == 1) {
 			client->setPort((int) roundf(value * (BRIDGE_NUM_PARAMS - 1.f)));
@@ -96,7 +96,7 @@ struct BridgeVST : public AudioEffectX {
 
 	float getParameter(VstInt32 index) override {
 		if (index == 0) {
-			return client->getTCPPort() / (float) (TCP_PORT_MAX);
+			return (client->getTCPPort() - TCP_PORT_MIN) / (float) (TCP_PORT_RANGE);
 		}
 		else if (index == 1) {
 			return client->getPort() / (BRIDGE_NUM_PARAMS - 1.f);
